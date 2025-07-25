@@ -75,6 +75,122 @@ TEST(ini_test, normal) {
   ASSERT_EQ(ini.dump(), CONTENT);
 }
 
+TEST(ini_test, no_ending_crlf) {
+  {
+    const char *content = "[section1] ;section1 comment";
+    ini_file ini;
+    ASSERT_EQ(ini.parse(content), true);
+    ini_file::ini_data data = ini.data();
+    ASSERT_EQ(data.sections.size(), 1);
+    {
+      const auto &section = data.sections.front();
+      ASSERT_EQ(section.name, "section1");
+      ASSERT_EQ(section.comment, "section1 comment");
+      ASSERT_EQ(section.lines.size(), 0);
+    }
+    ASSERT_EQ(ini.dump(), content + std::string("\r\n\r\n"));
+  }
+  {
+    const char *content = "[section1]    ;section1 comment\r\n"
+                          "key1 = value1 ;comment1";
+    ini_file ini;
+    ASSERT_EQ(ini.parse(content), true);
+    ini_file::ini_data data = ini.data();
+    ASSERT_EQ(data.sections.size(), 1);
+    {
+      const auto &section = data.sections.front();
+      ASSERT_EQ(section.name, "section1");
+      ASSERT_EQ(section.comment, "section1 comment");
+      ASSERT_EQ(section.lines.size(), 1);
+      {
+        const auto &line = section.lines.front();
+        ASSERT_EQ(line.key, "key1");
+        ASSERT_EQ(line.value, "value1");
+        ASSERT_EQ(line.comment, "comment1");
+      }
+    }
+    ASSERT_EQ(ini.dump(), content + std::string("\r\n\r\n"));
+  }
+  {
+    const char *content = "[section1]    ;section1 comment\r\n"
+                          "key1 = value1 ; comment1\r\n"
+                          "\r\n"
+                          "[section2] ;section2 comment";
+    ini_file ini;
+    ASSERT_EQ(ini.parse(content), true);
+    ini_file::ini_data data = ini.data();
+    ASSERT_EQ(data.sections.size(), 2);
+    {
+      const auto &section = data.sections.front();
+      ASSERT_EQ(section.name, "section1");
+      ASSERT_EQ(section.comment, "section1 comment");
+      ASSERT_EQ(section.lines.size(), 1);
+      {
+        const auto &line = section.lines.front();
+        ASSERT_EQ(line.key, "key1");
+        ASSERT_EQ(line.value, "value1");
+        ASSERT_EQ(line.comment, " comment1");
+      }
+    }
+    {
+      const auto &section = data.sections.back();
+      ASSERT_EQ(section.name, "section2");
+      ASSERT_EQ(section.comment, "section2 comment");
+      ASSERT_EQ(section.lines.size(), 0);
+    }
+    ASSERT_EQ(ini.dump(), content + std::string("\r\n\r\n"));
+  }
+  {
+    const char *content = "; comment line";
+
+    ini_file ini;
+    ASSERT_EQ(ini.parse(content), true);
+    ini_file::ini_data data = ini.data();
+    ASSERT_EQ(data.sections.size(), 1);
+    {
+      const auto &section = data.sections.front();
+      ASSERT_EQ(section.name, "");
+      ASSERT_EQ(section.comment, "");
+      ASSERT_EQ(section.lines.size(), 1);
+      {
+        const auto &line = section.lines.front();
+        ASSERT_EQ(line.key, "");
+        ASSERT_EQ(line.value, "");
+        ASSERT_EQ(line.comment, " comment line");
+      }
+    }
+    ASSERT_EQ(ini.dump(), content + std::string("\r\n\r\n"));
+  }
+  {
+    const char *content = "; comment line\r\n"
+                          "key1 = value1 ; comment1";
+
+    ini_file ini;
+    ASSERT_EQ(ini.parse(content), true);
+    ini_file::ini_data data = ini.data();
+    ASSERT_EQ(data.sections.size(), 1);
+    {
+      const auto &section = data.sections.front();
+      ASSERT_EQ(section.name, "");
+      ASSERT_EQ(section.comment, "");
+      ASSERT_EQ(section.lines.size(), 2);
+      {
+        const auto &line = section.lines.front();
+        ASSERT_EQ(line.key, "");
+        ASSERT_EQ(line.value, "");
+        ASSERT_EQ(line.comment, " comment line");
+      }
+      {
+        const auto &line = section.lines.back();
+        ASSERT_EQ(line.key, "key1");
+        ASSERT_EQ(line.value, "value1");
+        ASSERT_EQ(line.comment, " comment1");
+      }
+    }
+    ASSERT_EQ(ini.dump(), content + std::string("\r\n\r\n"));
+  }
+}
+
 TEST(ini_test, global_section) {
   const char *content = "; comment line\r\n"
                         "key1 = value1 ; comment1\r\n"

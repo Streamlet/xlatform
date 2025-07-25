@@ -62,9 +62,7 @@ bool has_section(const TCHAR *path, const std::wstring &section) {
 
 bool add_section(const TCHAR *path, const std::string &section, const std::string &comment) {
   xl::ini_t<char> ini;
-  if (!ini.load(path)) {
-    return false;
-  }
+  ini.load(path);
   if (!ini.add_section(section, comment)) {
     return false;
   }
@@ -72,9 +70,7 @@ bool add_section(const TCHAR *path, const std::string &section, const std::strin
 }
 bool add_section(const TCHAR *path, const std::wstring &section, const std::wstring &comment) {
   xl::ini_t<wchar_t> ini;
-  if (!ini.load(path)) {
-    return false;
-  }
+  ini.load(path);
   if (!ini.add_section(section, comment)) {
     return false;
   }
@@ -167,9 +163,7 @@ bool set_value(const TCHAR *path,
                const std::string &value,
                const std::string &comment) {
   xl::ini_t<char> ini;
-  if (!ini.load(path)) {
-    return false;
-  }
+  ini.load(path);
   if (!ini.set_value(section, key, value, comment)) {
     return false;
   }
@@ -181,9 +175,7 @@ bool set_value(const TCHAR *path,
                const std::wstring &value,
                const std::wstring &comment) {
   xl::ini_t<wchar_t> ini;
-  if (!ini.load(path)) {
-    return false;
-  }
+  ini.load(path);
   if (!ini.set_value(section, key, value, comment)) {
     return false;
   }

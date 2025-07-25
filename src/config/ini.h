@@ -59,10 +59,8 @@ public:
 
   std::vector<std::basic_string<CharType>> enum_sections() const;
   bool has_section(const std::basic_string<CharType> &section) const;
-  bool add_section(const std::basic_string<CharType> &section,
-                   const std::basic_string<CharType> &comment = {},
-                   bool save = true);
-  bool remove_section(const std::basic_string<CharType> &section, bool save = true);
+  bool add_section(const std::basic_string<CharType> &section, const std::basic_string<CharType> &comment = {});
+  bool remove_section(const std::basic_string<CharType> &section);
 
   std::vector<std::basic_string<CharType>> enum_keys(const std::basic_string<CharType> &section) const;
   std::vector<std::pair<std::basic_string<CharType>, std::basic_string<CharType>>>
@@ -73,13 +71,10 @@ public:
   bool set_value(const std::basic_string<CharType> &section,
                  const std::basic_string<CharType> &key,
                  const std::basic_string<CharType> &value,
-                 const std::basic_string<CharType> &comment = {},
-                 bool save = true);
-  bool
-  remove_value(const std::basic_string<CharType> &section, const std::basic_string<CharType> &key, bool save = true);
+                 const std::basic_string<CharType> &comment = {});
+  bool remove_value(const std::basic_string<CharType> &section, const std::basic_string<CharType> &key);
 
 private:
-  native_string path_;
   ini_data data_;
 };
 
@@ -89,7 +84,6 @@ inline bool ini_t<CharType>::load(const TCHAR *path) {
   if (content.empty()) {
     return false;
   }
-  path_ = path;
   return parse(content);
 }
 
@@ -99,20 +93,19 @@ inline bool ini_t<wchar_t>::load(const TCHAR *path) {
   if (content.empty()) {
     return false;
   }
-  path_ = path;
   return parse(content);
 }
 
 template <typename CharType>
 inline bool ini_t<CharType>::save(const TCHAR *path) const {
   std::basic_string<CharType> content = dump();
-  return file::write(path_.c_str(), content);
+  return file::write(path, content);
 }
 
 template <>
 inline bool ini_t<wchar_t>::save(const TCHAR *path) const {
   std::wstring content = dump();
-  return file::write_text_utf16_le(path_.c_str(), content);
+  return file::write_text_utf16_le(path, content);
 }
 
 namespace {
@@ -264,6 +257,9 @@ bool match_line_ending(const std::basic_string<CharType> &content, size_t &pos) 
   while (content[pos] == '\r' && pos < content.length()) {
     ++pos;
   }
+  if (pos >= content.length()) {
+    return true;
+  }
   if (content[pos] != '\n') {
     return false;
   }
@@ -361,6 +357,9 @@ bool match_section(const std::basic_string<CharType> &content,
     }
     if (!line.key.empty() || !line.value.empty() || !line.comment.empty()) {
       section_add_line<CharType>(section, std::move(line));
+    }
+    if (pos >= content.length()) {
+      break;
     }
   }
   return true;
@@ -514,8 +513,7 @@ bool ini_t<CharType>::has_section(const std::basic_string<CharType> &section) co
 
 template <typename CharType>
 bool ini_t<CharType>::add_section(const std::basic_string<CharType> &section,
-                                  const std::basic_string<CharType> &comment,
-                                  bool save) {
+                                  const std::basic_string<CharType> &comment) {
   auto it = data_.section_map.find(section);
   if (it == data_.section_map.end()) {
     data_.sections.push_back({section, comment, {}, {}});
@@ -526,23 +524,17 @@ bool ini_t<CharType>::add_section(const std::basic_string<CharType> &section,
     }
     it->second->comment = comment;
   }
-  if (save && !path_.empty()) {
-    this->save(path_.c_str());
-  }
   return true;
 }
 
 template <typename CharType>
-bool ini_t<CharType>::remove_section(const std::basic_string<CharType> &section, bool save) {
+bool ini_t<CharType>::remove_section(const std::basic_string<CharType> &section) {
   auto it = data_.section_map.find(section);
   if (it == data_.section_map.end()) {
     return false;
   }
   data_.sections.erase(it->second);
   data_.section_map.erase(it);
-  if (save && !path_.empty()) {
-    this->save(path_.c_str());
-  }
   return true;
 }
 
@@ -607,8 +599,7 @@ template <typename CharType>
 bool ini_t<CharType>::set_value(const std::basic_string<CharType> &section,
                                 const std::basic_string<CharType> &key,
                                 const std::basic_string<CharType> &value,
-                                const std::basic_string<CharType> &comment,
-                                bool save) {
+                                const std::basic_string<CharType> &comment) {
   auto it_section = data_.section_map.find(section);
   if (it_section == data_.section_map.end()) {
     data_.sections.push_back({section, comment, {}, {}});
@@ -627,16 +618,11 @@ bool ini_t<CharType>::set_value(const std::basic_string<CharType> &section,
     it_key->second->value = value;
     it_key->second->comment = comment;
   }
-  if (save && !path_.empty()) {
-    this->save(path_.c_str());
-  }
   return true;
 }
 
 template <typename CharType>
-bool ini_t<CharType>::remove_value(const std::basic_string<CharType> &section,
-                                   const std::basic_string<CharType> &key,
-                                   bool save) {
+bool ini_t<CharType>::remove_value(const std::basic_string<CharType> &section, const std::basic_string<CharType> &key) {
   auto it_section = data_.section_map.find(section);
   if (it_section == data_.section_map.end()) {
     return false;
@@ -648,9 +634,6 @@ bool ini_t<CharType>::remove_value(const std::basic_string<CharType> &section,
   }
   ini_section.lines.erase(it_key->second);
   ini_section.line_map.erase(it_key);
-  if (save && !path_.empty()) {
-    this->save(path_.c_str());
-  }
   return false;
 }
 
