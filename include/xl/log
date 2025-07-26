@@ -73,7 +73,19 @@ inline void log_collect_messages(std::vector<std::string> &messages, const char 
 }
 
 template <typename... R>
+inline void log_collect_messages(std::vector<std::string> &messages, char *arg, R... rest) {
+  messages.push_back(arg);
+  log_collect_messages(messages, std::forward<R>(rest)...);
+}
+
+template <typename... R>
 inline void log_collect_messages(std::vector<std::string> &messages, const wchar_t *arg, R... rest) {
+  messages.push_back(encoding::utf16_to_utf8(arg));
+  log_collect_messages(messages, std::forward<R>(rest)...);
+}
+
+template <typename... R>
+inline void log_collect_messages(std::vector<std::string> &messages, wchar_t *arg, R... rest) {
   messages.push_back(encoding::utf16_to_utf8(arg));
   log_collect_messages(messages, std::forward<R>(rest)...);
 }
