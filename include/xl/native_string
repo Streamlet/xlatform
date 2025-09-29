@@ -33,10 +33,10 @@
 
 namespace xl {
 
-using native_string = std::basic_string<TCHAR>;
-using native_string_stream = std::basic_stringstream<TCHAR>;
+typedef std::basic_string<TCHAR> native_string;
+typedef std::basic_stringstream<TCHAR> native_string_stream;
 #if __cplusplus >= 201703L
-using native_string_view = std::basic_string_view<TCHAR>;
+typedef std::basic_string_view<TCHAR> native_string_view;
 #endif
 
 #if __cplusplus >= 201103L || _MSC_VER >= 1600

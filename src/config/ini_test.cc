@@ -25,7 +25,7 @@
 
 namespace {
 
-using ini_file = xl::ini_t<char>;
+typedef xl::ini_t<char> ini_file;
 
 const char *CONTENT = "[section1]    ;section1 comment\r\n"
                       "key1 = value1 ;comment1\r\n"

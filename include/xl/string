@@ -94,8 +94,8 @@ private:
 
 #endif
 
-using string_ref = basic_string_ref<char>;
-using wstring_ref = basic_string_ref<wchar_t>;
+typedef basic_string_ref<char> string_ref;
+typedef basic_string_ref<wchar_t> wstring_ref;
 
 namespace string {
 ////////////////////////////////////////////////////////////////////////////////

@@ -40,8 +40,8 @@ struct url_parts_t {
   basic_string_ref<CharType> fragment;
 };
 
-using url_parts = url_parts_t<char>;
-using url_parts_w = url_parts_t<wchar_t>;
+typedef url_parts_t<char> url_parts;
+typedef url_parts_t<wchar_t> url_parts_w;
 
 namespace url {
 
