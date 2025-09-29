@@ -410,7 +410,7 @@ void thread_shutdown() {
 }
 
 void shutdown() {
-  log_thread_.post_task(thread_shutdown);
+  log_thread_.post_task(std::move(thread_shutdown));
   log_thread_.join();
 }
 
