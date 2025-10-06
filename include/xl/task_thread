@@ -47,10 +47,11 @@ private:
   void run();
 
 private:
-  thread thread_;
   std::queue<std::function<void()>> tasks_;
   bool quit_ = false;
   locker locker_;
+  event event_;
+  thread thread_;
 };
 
 } // namespace xl

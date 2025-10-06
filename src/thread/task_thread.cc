@@ -24,7 +24,7 @@
 
 namespace xl {
 
-task_thread::task_thread() : thread_(std::bind(&task_thread::run, this)) {
+task_thread::task_thread() : thread_(std::bind(&task_thread::run, this)), event_(false, true) {
 }
 
 task_thread::~task_thread() {
@@ -38,12 +38,14 @@ bool task_thread::post_task(std::function<void()> &&task) {
     return false;
   }
   tasks_.push(std::move(task));
+  event_.set();
   return true;
 }
 
 void task_thread::quit() {
   lock_guard lock(locker_);
   quit_ = true;
+  event_.set();
 }
 
 void task_thread::join() {
@@ -55,6 +57,7 @@ void task_thread::join() {
 void task_thread::run() {
   bool run = true;
   while (run) {
+    event_.wait();
     std::queue<std::function<void()>> tasks;
     {
       lock_guard lock(locker_);
